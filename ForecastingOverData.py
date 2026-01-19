@@ -24,7 +24,7 @@ plt.rcParams['figure.figsize'] = (16, 10)
 class CallCenterForecaster:
     """Forecast call center incoming calls using Prophet."""
     
-    def __init__(self, data_path):
+    def __init__(self, data_path, end_date=None):
         """Load and prepare the z-score filtered dataset."""
         print("=" * 70)
         print("CALL CENTER FORECASTING WITH PROPHET")
@@ -35,6 +35,14 @@ class CallCenterForecaster:
         self.df = pd.read_excel(data_path)
         self.df['Date'] = pd.to_datetime(self.df['Date'])
         self.df = self.df.sort_values('Date').reset_index(drop=True)
+        
+        # Filter data up to end_date if specified
+        if end_date is not None:
+            end_date = pd.to_datetime(end_date)
+            original_count = len(self.df)
+            self.df = self.df[self.df['Date'] <= end_date].copy()
+            print(f"Filtered data to end date: {end_date.date()}")
+            print(f"  Records removed: {original_count - len(self.df)}")
         
         print(f"Data loaded successfully!")
         print(f"  Total records: {len(self.df)}")
@@ -350,8 +358,11 @@ def main():
     print("=" * 70)
     print()
     
-    # Initialize forecaster with z-score filtered data
-    forecaster = CallCenterForecaster('CallCenterData_zscore_filtered_20260117_231525.xlsx')
+    # Initialize forecaster with z-score filtered data, only data until May 2023
+    forecaster = CallCenterForecaster(
+        'CallCenterData_zscore_filtered_20260117_231525.xlsx',
+        end_date='2023-05-31'
+    )
     
     # Run full forecast: Train on 2020-2022, forecast 2 years ahead
     forecaster.run_full_forecast(train_start=2020, train_end=2022, forecast_years=2)

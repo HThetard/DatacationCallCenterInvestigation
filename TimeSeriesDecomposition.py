@@ -26,7 +26,7 @@ plt.rcParams['figure.figsize'] = (16, 12)
 class TimeSeriesDecomposer:
     """Decompose time series data for call center incoming calls."""
     
-    def __init__(self, data_path):
+    def __init__(self, data_path, end_date=None):
         """Load the z-score filtered dataset."""
         print("=" * 70)
         print("TIME SERIES DECOMPOSITION - INCOMING CALLS")
@@ -36,6 +36,14 @@ class TimeSeriesDecomposer:
         self.df = pd.read_excel(data_path)
         self.df['Date'] = pd.to_datetime(self.df['Date'])
         self.df = self.df.sort_values('Date').reset_index(drop=True)
+        
+        # Filter data up to end_date if specified
+        if end_date is not None:
+            end_date = pd.to_datetime(end_date)
+            original_count = len(self.df)
+            self.df = self.df[self.df['Date'] <= end_date].copy()
+            print(f"Filtered data to end date: {end_date.date()}")
+            print(f"  Records removed: {original_count - len(self.df)}")
         
         # Set Date as index for time series analysis
         self.ts = self.df.set_index('Date')['IncomingCalls']
@@ -149,8 +157,8 @@ class TimeSeriesDecomposer:
         axes[3].grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig('TimeSeriesDecomposition.png', dpi=300, bbox_inches='tight')
-        print("  Saved: TimeSeriesDecomposition.png")
+        plt.savefig('RefactoredTimeSeriesDecomposition.png', dpi=300, bbox_inches='tight')
+        print("  Saved: RefactoredTimeSeriesDecomposition.png")
         plt.show()
     
     def plot_seasonal_pattern(self):
@@ -322,7 +330,7 @@ class TimeSeriesDecomposer:
         print("DECOMPOSITION COMPLETE!")
         print("=" * 70)
         print("\n📊 Generated Files:")
-        print("  1. TimeSeriesDecomposition.png - Full decomposition plot")
+        print("  1. RefactoredTimeSeriesDecomposition.png - Full decomposition plot")
         print("  2. SeasonalPattern.png - Seasonal pattern analysis")
         print("  3. ACF_PACF_Analysis.png - Autocorrelation analysis")
         print("  4. IncomingCalls_Decomposed_Components.xlsx - Component data")
@@ -338,8 +346,11 @@ def main():
     print("=" * 70)
     print()
     
-    # Initialize decomposer with z-score filtered data
-    decomposer = TimeSeriesDecomposer('CallCenterData_zscore_filtered_20260117_231525.xlsx')
+    # Initialize decomposer with z-score filtered data, filtered to May 31, 2023
+    decomposer = TimeSeriesDecomposer(
+        'CallCenterData_zscore_filtered_20260117_231525.xlsx',
+        end_date='2023-05-31'
+    )
     
     # Run full analysis with weekly seasonality (period=7)
     decomposer.run_full_analysis(period=7, model='additive')
